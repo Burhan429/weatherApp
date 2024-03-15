@@ -9,18 +9,23 @@ import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.weatherapp.adapter.CurrentAdapterClass
+import com.example.weatherapp.adapter.DailyAdapterClass
 import com.example.weatherapp.data_class.CurrentDataClass
+import com.example.weatherapp.data_class.DailyDataClass
 import com.example.weatherapp.data_class.LiveViewModel
 import com.example.weatherapp.databinding.ActivityDesignBinding
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
 class DesignActivity : AppCompatActivity() {
     private lateinit var weatherViewModel: LiveViewModel
     private lateinit var adapter: CurrentAdapterClass
+    private lateinit var adapter2: DailyAdapterClass
 
     private var dataList = ArrayList<CurrentDataClass>()
+    private var dailyList = ArrayList<DailyDataClass>()
 
     private lateinit var binding: ActivityDesignBinding
 
@@ -32,6 +37,8 @@ class DesignActivity : AppCompatActivity() {
         weatherViewModel = ViewModelProvider(this).get(LiveViewModel::class.java)
 
         weatherViewModel.fetchWeatherData("srinagar")
+        weatherViewModel.fetchDailyWeather("srinagar","9e61e3fff6a2f38704d2734d9619bbe8","metric",15)
+
         setupRecyclerView()
         searchCity()
 
@@ -83,14 +90,30 @@ class DesignActivity : AppCompatActivity() {
                     dating.text = date()
                     changeImagesAccordingToCondition(condition)
                 }
-
-
-
             }
         }
 
+        weatherViewModel.factsLiveDataObject2.observe(this) { forecast ->
+            forecast?.let {
+                dailyList.clear()
+                setDate(Date())
+                it.list?.forEachIndexed { index, forecastItem ->
+                    val icon = forecastItem.weather?.getOrNull(0)?.icon ?: ""
+                    val dailyData = DailyDataClass(
+                        date(index),
+                        getWeatherIconResource(icon),
 
+                        forecastItem.main?.temp.toString() + " \u2103"
+                    )
+
+                    dailyList.add(dailyData)
+                }
+                adapter2.notifyDataSetChanged()
+
+            }
+            }
     }
+
 
     private fun setupRecyclerView() {
         binding.layout.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
@@ -98,7 +121,10 @@ class DesignActivity : AppCompatActivity() {
         adapter = CurrentAdapterClass(dataList)
         binding.layout.adapter = adapter
 
-
+        binding.recyclerView.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
+        binding.recyclerView.setHasFixedSize(true)
+        adapter2 = DailyAdapterClass(dailyList)
+        binding.recyclerView.adapter = adapter2
     }
 
     private fun searchCity() {
@@ -106,6 +132,7 @@ class DesignActivity : AppCompatActivity() {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) {
                     weatherViewModel.fetchWeatherData(query)
+//                    weatherViewModel.fetchDailyWeather("srinagar","9e61e3fff6a2f38704d2734d9619bbe8","metric",15)
                 }
                 return true
             }
@@ -114,6 +141,40 @@ class DesignActivity : AppCompatActivity() {
                 return true
             }
         })
+    }
+    private fun getWeatherIconResource(FlatIcon: String): Int {
+        return when (FlatIcon) {
+            "01d" -> R.drawable.clear_day
+            "01n" -> R.drawable.clear_night
+            "02d" -> R.drawable.cloudy_day
+            "02n" -> R.drawable.cloudy_night
+            "03d", "03n" -> R.drawable.scattered_clouds
+            "04d", "04n" -> R.drawable.broken_clouds
+            "09d", "09n" -> R.drawable.showers
+            "10d", "10n" -> R.drawable.rainy
+            "11d", "11n" -> R.drawable.thunderstorm
+            "13d", "13n" -> R.drawable.snow
+            "50d", "50n" -> R.drawable.mist
+            else -> R.drawable.unknown
+        }
+    }
+
+    private fun setDate(date: Date) {
+        baseDate = date
+    }
+
+    private var baseDate: Date? = null
+
+    private fun date(offset: Int): String {
+        baseDate?.let { base ->
+            val calendar = Calendar.getInstance()
+            calendar.time = base
+            calendar.add(Calendar.DATE, offset)
+            val dateFormat = SimpleDateFormat("dd MMMM ", Locale.getDefault())
+            return dateFormat.format(calendar.time)
+        }
+        // Return empty string or handle error if baseDate is null
+        return ""
     }
 
     private fun date(): String {
