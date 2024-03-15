@@ -44,8 +44,8 @@ class LiveViewModel : ViewModel() {
     }
 
 
-    fun fetchDailyWeather(cityName: String, apiKey: String, units: String, count: Int) {
-        apiInterface.getDailyWeather(cityName, apiKey, units, count)
+    fun fetchDailyWeather(cityName: String) {
+        apiInterface.getDailyWeather(cityName, "9e61e3fff6a2f38704d2734d9619bbe8", "metric", 15)
             .enqueue(object : Callback<Forecast> {
                 override fun onResponse(call: Call<Forecast>, response: Response<Forecast>) {
                     if (response.isSuccessful) {

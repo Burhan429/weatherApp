@@ -37,7 +37,7 @@ class DesignActivity : AppCompatActivity() {
         weatherViewModel = ViewModelProvider(this).get(LiveViewModel::class.java)
 
         weatherViewModel.fetchWeatherData("srinagar")
-        weatherViewModel.fetchDailyWeather("srinagar","9e61e3fff6a2f38704d2734d9619bbe8","metric",15)
+        weatherViewModel.fetchDailyWeather("srinagar")
 
         setupRecyclerView()
         searchCity()
@@ -132,7 +132,7 @@ class DesignActivity : AppCompatActivity() {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) {
                     weatherViewModel.fetchWeatherData(query)
-//                    weatherViewModel.fetchDailyWeather("srinagar","9e61e3fff6a2f38704d2734d9619bbe8","metric",15)
+                    weatherViewModel.fetchDailyWeather(query)
                 }
                 return true
             }
