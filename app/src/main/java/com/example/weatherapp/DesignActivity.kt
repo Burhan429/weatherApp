@@ -26,18 +26,21 @@ class DesignActivity : AppCompatActivity() {
 
     private var dataList = ArrayList<CurrentDataClass>()
     private var dailyList = ArrayList<DailyDataClass>()
-
+    private var selectedCity: String = "srinagar"
     private lateinit var binding: ActivityDesignBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDesignBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
+        if (savedInstanceState != null) {
+            // Restore the selected city from saved instance state
+            selectedCity = savedInstanceState.getString(KEY_SELECTED_CITY, "srinagar") ?: "srinagar"
+        }
         weatherViewModel = ViewModelProvider(this).get(LiveViewModel::class.java)
 
-        weatherViewModel.fetchWeatherData("srinagar")
-        weatherViewModel.fetchDailyWeather("srinagar")
+        weatherViewModel.fetchWeatherData(selectedCity)
+        weatherViewModel.fetchDailyWeather(selectedCity)
 
         setupRecyclerView()
         searchCity()
@@ -65,13 +68,49 @@ class DesignActivity : AppCompatActivity() {
                 val weather = it.weather?.firstOrNull()?.main ?: "unknown"
 
                 dataList.clear()
-                        dataList.add(CurrentDataClass(R.drawable.humidity, "${it.main?.humidity} %","Humidity" ))
-                        dataList.add(CurrentDataClass(R.drawable.wind, "${it.wind?.speed} m/s","Wind Speed"))
-                        dataList.add(CurrentDataClass(R.drawable.climate_change, it.weather?.firstOrNull()?.main?:"unknown","Condition"))
-                        dataList.add(CurrentDataClass(R.drawable.sunrise, "${time(it.sys?.sunrise ?: 0)}","Sunrise"))
-                        dataList.add(CurrentDataClass(R.drawable.sunset, "${time(it.sys?.sunset ?: 0)}","Sunset" ))
-                        dataList.add(CurrentDataClass(R.drawable.high_tide, "${it.main?.seaLevel} hpa","Sea Level"))
-                     adapter.notifyDataSetChanged()
+                dataList.add(
+                    CurrentDataClass(
+                        R.drawable.humidity,
+                        "${it.main?.humidity} %",
+                        "Humidity"
+                    )
+                )
+                dataList.add(
+                    CurrentDataClass(
+                        R.drawable.wind,
+                        "${it.wind?.speed} m/s",
+                        "Wind Speed"
+                    )
+                )
+                dataList.add(
+                    CurrentDataClass(
+                        R.drawable.climate_change,
+                        it.weather?.firstOrNull()?.main ?: "unknown",
+                        "Condition"
+                    )
+                )
+                dataList.add(
+                    CurrentDataClass(
+                        R.drawable.sunrise,
+                        "${time(it.sys?.sunrise ?: 0)}",
+                        "Sunrise"
+                    )
+                )
+                dataList.add(
+                    CurrentDataClass(
+                        R.drawable.sunset,
+                        "${time(it.sys?.sunset ?: 0)}",
+                        "Sunset"
+                    )
+                )
+                dataList.add(
+                    CurrentDataClass(
+                        R.drawable.high_tide,
+                        "${it.main?.seaLevel} hpa",
+                        "Sea Level"
+                    )
+                )
+                adapter.notifyDataSetChanged()
 
                 binding.apply {
                     temp.text = "$temperature \u2103"
@@ -81,7 +120,7 @@ class DesignActivity : AppCompatActivity() {
                     locationIcon.text = cityName
                     number1.text = "$humidity %"
                     number2.text = "$wind m/s"
-                    number3.text= "$weather"
+                    number3.text = "$weather"
                     number4.text = "$sunrise"
                     number5.text = "$sunset"
                     number6.text = "$seaLevel hpa"
@@ -111,17 +150,28 @@ class DesignActivity : AppCompatActivity() {
                 adapter2.notifyDataSetChanged()
 
             }
-            }
+        }
     }
 
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        // Save the selected city to the bundle
+        outState.putString(KEY_SELECTED_CITY, selectedCity)
+    }
+
+    companion object {
+        private const val KEY_SELECTED_CITY = "selected_city"
+    }
 
     private fun setupRecyclerView() {
-        binding.layout.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
+        binding.layout.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.layout.setHasFixedSize(true)
         adapter = CurrentAdapterClass(dataList)
         binding.layout.adapter = adapter
 
-        binding.recyclerView.layoutManager = LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL,false)
+        binding.recyclerView.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
         binding.recyclerView.setHasFixedSize(true)
         adapter2 = DailyAdapterClass(dailyList)
         binding.recyclerView.adapter = adapter2
@@ -131,6 +181,7 @@ class DesignActivity : AppCompatActivity() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextSubmit(query: String?): Boolean {
                 if (query != null) {
+                    selectedCity = query
                     weatherViewModel.fetchWeatherData(query)
                     weatherViewModel.fetchDailyWeather(query)
                 }
@@ -142,6 +193,7 @@ class DesignActivity : AppCompatActivity() {
             }
         })
     }
+
     private fun getWeatherIconResource(FlatIcon: String): Int {
         return when (FlatIcon) {
             "01d" -> R.drawable.clear_day
