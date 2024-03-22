@@ -1,4 +1,4 @@
-package com.example.weatherapp
+package com.example.weatherapp.activity
 
 import android.content.Context
 import android.os.Bundle
@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.weatherapp.R
 import com.example.weatherapp.adapter.CurrentAdapterClass
 import com.example.weatherapp.adapter.DailyAdapterClass
 import com.example.weatherapp.data_class.CurrentDataClass
